@@ -1,0 +1,57 @@
+---
+- name: install a few packages maybe used during tranformation
+  apt:
+    state: latest
+    pkg:
+      - wget
+      - gnupg
+      - dirmngr
+
+- name: install kali gpg key for apt
+  block:
+    - name: fetch gpg key directly from kali.org
+      apt_key:
+        url: https://archive.kali.org/archive-key.asc
+        state: present
+        id: 44C6513A8E4FB3D30875F758ED444FF07D8D0BF6
+
+  rescue:
+    - name: use fallback and install the key from keys.gnupg.net
+      apt_key:
+        keyserver: keys.gnupg.net
+        state: present
+        id: 44C6513A8E4FB3D30875F758ED444FF07D8D0BF6
+
+- name: backup old /etc/apt/sources.list file
+  command: "mv /etc/apt/sources.list /etc/apt/sources.list.backup_{{ ansible_date_time.iso8601_basic_short }}"
+
+- name: replace /etc/apt/sources.list contents with kali repository
+  copy:
+        content: |
+          # Kali Linux rolling release main repository
+          deb http://http.kali.org/kali kali-rolling main non-free contrib
+        dest: /etc/apt/sources.list
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Update and upgrade system
+  apt:
+    update_cache: yes
+    upgrade: dist
+    dpkg_options: 'force-confold,force-confdef'
+
+- name: Remove and purge old packages
+  apt:
+    purge: yes
+    autoremove: yes
+
+- name: Clean apt cache
+  apt:
+    autoclean: yes
+
+- name: install kali
+  apt:
+    state: latest
+    name: kali-linux-everything
+
