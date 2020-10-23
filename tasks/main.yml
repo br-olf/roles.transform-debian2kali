@@ -22,9 +22,6 @@
         state: present
         id: 44C6513A8E4FB3D30875F758ED444FF07D8D0BF6
 
-- name: backup old /etc/apt/sources.list file
-  command: "mv /etc/apt/sources.list /etc/apt/sources.list.backup_{{ ansible_date_time.iso8601_basic_short }}"
-
 - name: replace /etc/apt/sources.list contents with kali repository
   copy:
         content: |
